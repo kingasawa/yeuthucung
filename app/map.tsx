@@ -1,12 +1,14 @@
 import React, {useEffect, useRef, useState} from 'react';
 import MapView, { Marker } from 'react-native-maps';
-import {StyleSheet, View, Text, Image, TextInput, Button, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator} from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
-import {XStack, YStack} from "tamagui";
+import {XStack, YStack, Input, Button} from "tamagui";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import {LocationObjectCoords} from "expo-location/src/Location.types";
 import { Link, useRouter } from "expo-router";
+import MaterialIcon from "@expo/vector-icons/MaterialIcons";
+import {Search} from "@tamagui/lucide-icons";
 
 export default function App() {
   const router = useRouter();
@@ -103,13 +105,39 @@ export default function App() {
   return (
     <View style={styles.container}>
       <XStack style={styles.mapHeader}>
-        {/*<TextInput*/}
-        {/*  style={styles.input}*/}
-        {/*  placeholder="Tìm kiếm địa điểm"*/}
-        {/*  value={search}*/}
-        {/*  onChangeText={setSearch}*/}
-        {/*/>*/}
-        <Button title="Back" onPress={goBack} />
+        <Button
+          zIndex={1}
+          position="absolute"
+          top={0}
+          left={-10}
+          size="$5"
+          icon={<MaterialIcon name="place" size={30}/>}
+          backgroundColor='transparent'
+          color="black"
+        />
+        <Input
+          height={50}
+          paddingLeft={55}
+          placeholder='Searchword'
+          flex={1}
+          focusStyle={{
+            backgroundColor: 'rgba(0,0,0,0.25)'
+          }}
+          borderWidth="$0"
+          backgroundColor='rgba(59,59,59,0.25)'
+          borderRadius='$8'
+        />
+        <Button
+          zIndex={1}
+          position="absolute"
+          top={0}
+          right={0}
+          size="$5"
+          icon={<MaterialIcon name="search" size={30}/>}
+          backgroundColor='transparent'
+          color="black"
+        />
+        {/*<Button title="Back" onPress={goBack} />*/}
       </XStack>
       {location ? (
         <MapView
@@ -155,15 +183,12 @@ export default function App() {
       ) : (
         <Text>{text}</Text>
       )}
-      <YStack gap="$2" style={styles.tool}>
-        <TouchableOpacity onPress={handleLocateMe}>
-          <MaterialIcons name="my-location" size={24} color="yellow" />
-        </TouchableOpacity>
+      <YStack gap="$1" style={styles.tool}>
         <TouchableOpacity onPress={handleLocateMe}>
           {loading ? (
             <ActivityIndicator size="small" color="#ffffff" />
           ) : (
-            <MaterialIcons name="my-location" size={26} color="white" />
+            <MaterialIcons name="my-location" size={50} color="white" />
           )}
         </TouchableOpacity>
       </YStack>
@@ -185,23 +210,27 @@ const styles = StyleSheet.create({
     color: 'white'
   },
   mapHeader: {
-    paddingTop: 50,
-    // backgroundColor: 'rgba(0,0,0,0.35)'
+    marginTop: 50,
+    marginHorizontal: 10,
+    justifyContent: 'center'
   },
   input: {
+    flex: 1,
     height: 40,
     borderColor: 'gray',
+    borderRadius: 15,
+    backgroundColor: 'rgba(204,204,204,0.53)',
     borderWidth: 1,
     margin: 10,
     paddingHorizontal: 10,
   },
   tool: {
     position: 'absolute',
-    bottom: 100,
-    right: 20,
+    bottom: 60,
+    right: 30,
     backgroundColor: 'rgba(35,35,35,0.5)',
-    borderRadius: 30,
-    padding: 15,
+    borderRadius: 50,
+    padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
