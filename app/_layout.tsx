@@ -53,7 +53,7 @@ export default function RootLayout() {
 
     async function prepare() {
       await checkLoginStatus();
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1));
       if (loaded) {
         setIsReady(true);
       }

@@ -1,6 +1,9 @@
 import React, {useEffect, useRef, useState} from 'react';
 import MapView, { Marker } from 'react-native-maps';
-import {StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator} from 'react-native';
+import {
+  StyleSheet, View, Text, Image, TouchableOpacity, ActivityIndicator,
+  Keyboard, TouchableWithoutFeedback
+} from 'react-native';
 import * as Location from 'expo-location';
 import axios from 'axios';
 import {XStack, YStack, Input, Button} from "tamagui";
@@ -9,15 +12,16 @@ import {LocationObjectCoords} from "expo-location/src/Location.types";
 import { Link, useRouter } from "expo-router";
 import MaterialIcon from "@expo/vector-icons/MaterialIcons";
 import {Search} from "@tamagui/lucide-icons";
+import { AIConfigModal } from "@/components/AIConfigModal"
 
 export default function App() {
   const router = useRouter();
   const [location, setLocation] = useState<LocationObjectCoords>();
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string>(null);
+  const [errorMsg, setErrorMsg] = useState<string>('');
   const [markers, setMarkers] = useState([]);
   const [search, setSearch] = useState('');
-  const mapRef = useRef(null);
+  const mapRef = useRef<MapView | null>(null);
 
   const mapStyle = [
     {
@@ -32,45 +36,41 @@ export default function App() {
       elementType: 'labels.text.fill',
       stylers: [{ color: 'red' }],
     },
-    // Thêm các kiểu khác ở đây
   ];
 
   useEffect(() => {
     (async () => {
-      // Yêu cầu quyền truy cập vị trí
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         setErrorMsg('Permission to access location was denied');
         return;
       }
-
-      // Lấy vị trí hiện tại
       let loc = await Location.getCurrentPositionAsync({});
       setLocation(loc.coords);
     })();
   }, []);
 
-  const searchLocation = async () => {
-    try {
-      const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
-        params: {
-          address: search,
-          key: 'YOUR_GOOGLE_MAPS_API_KEY', // Thay thế bằng khóa API thực tế
-        },
-      });
-
-      const results = response.data.results;
-      const newMarkers = results.map(place => ({
-        title: place.formatted_address,
-        latitude: place.geometry.location.lat,
-        longitude: place.geometry.location.lng,
-      }));
-
-      setMarkers(newMarkers);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+  // const searchLocation = async () => {
+  //   try {
+  //     const response = await axios.get(`https://maps.googleapis.com/maps/api/geocode/json`, {
+  //       params: {
+  //         address: search,
+  //         key: 'YOUR_GOOGLE_MAPS_API_KEY', // Thay thế bằng khóa API thực tế
+  //       },
+  //     });
+  //
+  //     const results = response.data.results;
+  //     const newMarkers = results.map((place: any) => ({
+  //       title: place.formatted_address,
+  //       latitude: place.geometry.location.lat,
+  //       longitude: place.geometry.location.lng,
+  //     }));
+  //
+  //     setMarkers(newMarkers);
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // };
 
   const goBack = () => {
     router.replace('/')
@@ -79,15 +79,15 @@ export default function App() {
   const handleLocateMe = async () => {
     setLoading(true);
     try {
-      let loc = await Location.getLastKnownPositionAsync({});
+      let loc: any = await Location.getLastKnownPositionAsync({});
       setLocation(loc.coords);
-      if (mapRef.current && loc.coords) {
-        mapRef.current.animateToRegion({
+      if (mapRef?.current && loc.coords) {
+        mapRef.current?.animateToRegion({
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude,
           latitudeDelta: 0.01,
           longitudeDelta: 0.01,
-        }, 500); // Thay đổi thời gian về 200ms
+        }, 500);
         setLoading(false);
       }
     } catch (error) {
@@ -102,44 +102,16 @@ export default function App() {
     text = JSON.stringify(location);
   }
 
+  if (!location) {
+    return (
+      <Text>{text}</Text>
+    )
+  }
+
   return (
-    <View style={styles.container}>
-      <XStack style={styles.mapHeader}>
-        <Button
-          zIndex={1}
-          position="absolute"
-          top={0}
-          left={-10}
-          size="$5"
-          icon={<MaterialIcon name="place" size={30}/>}
-          backgroundColor='transparent'
-          color="black"
-        />
-        <Input
-          height={50}
-          paddingLeft={55}
-          placeholder='Searchword'
-          flex={1}
-          focusStyle={{
-            backgroundColor: 'rgba(0,0,0,0.25)'
-          }}
-          borderWidth="$0"
-          backgroundColor='rgba(59,59,59,0.25)'
-          borderRadius='$8'
-        />
-        <Button
-          zIndex={1}
-          position="absolute"
-          top={0}
-          right={0}
-          size="$5"
-          icon={<MaterialIcon name="search" size={30}/>}
-          backgroundColor='transparent'
-          color="black"
-        />
-        {/*<Button title="Back" onPress={goBack} />*/}
-      </XStack>
-      {location ? (
+    <>
+      <AIConfigModal />
+      <View style={styles.container}>
         <MapView
           ref={mapRef}
           style={styles.map}
@@ -152,7 +124,7 @@ export default function App() {
             longitudeDelta: 0.01,
           }}
           showsPointsOfInterest={false}
-          userInterfaceStyle="light"
+          userInterfaceStyle="dark"
         >
           <Marker
             coordinate={{
@@ -169,7 +141,7 @@ export default function App() {
               <Text>Me</Text>
             </View>
           </Marker>
-          {markers.map((marker, index) => (
+          {markers?.map((marker: any, index: number) => (
             <Marker
               key={index}
               coordinate={{
@@ -180,19 +152,13 @@ export default function App() {
             />
           ))}
         </MapView>
-      ) : (
-        <Text>{text}</Text>
-      )}
-      <YStack gap="$1" style={styles.tool}>
-        <TouchableOpacity onPress={handleLocateMe}>
-          {loading ? (
-            <ActivityIndicator size="small" color="#ffffff" />
-          ) : (
+        <YStack gap="$1" style={styles.tool}>
+          <TouchableOpacity onPress={handleLocateMe}>
             <MaterialIcons name="my-location" size={50} color="white" />
-          )}
-        </TouchableOpacity>
-      </YStack>
-    </View>
+          </TouchableOpacity>
+        </YStack>
+      </View>
+    </>
   );
 }
 
@@ -226,7 +192,7 @@ const styles = StyleSheet.create({
   },
   tool: {
     position: 'absolute',
-    bottom: 60,
+    top: 60,
     right: 30,
     backgroundColor: 'rgba(35,35,35,0.5)',
     borderRadius: 50,
